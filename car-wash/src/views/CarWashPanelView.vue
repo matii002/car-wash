@@ -5,13 +5,12 @@ import { ref } from 'vue'
 import { onMounted } from 'vue'
 import { fetchWashingRequests } from '@/washingRequest'
 import { db } from '@/firebase'
-import { doc, updateDoc, Timestamp } from 'firebase/firestore'
+import { doc, updateDoc, Timestamp, deleteDoc } from 'firebase/firestore'
 import dayjs from 'dayjs'
 import { Button } from 'primevue'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { useConfirm } from 'primevue/useconfirm'
 import InputText from 'primevue/inputtext'
-import DatePicker from 'primevue/datepicker'
 
 const confirm = useConfirm()
 
@@ -23,13 +22,24 @@ onMounted(async () => {
 
 async function updateIsAccepted(id, data) {
   try {
-    // console.log(data)
     const docRef = doc(db, 'washingOrders', id)
     await updateDoc(docRef, {
       isAccepted: data.isAccepted,
     })
   } catch (error) {
     console.log('Aktualizacja nie powiodła się!', error)
+  }
+}
+
+async function deleteIsAccepted(id, data) {
+  try {
+    const docRef = doc(db, 'washingOrders', id)
+    await deleteDoc(docRef, {
+      isAccepted: data.isAccepted,
+    })
+    washingRequest.value = washingRequest.value.filter((item) => item.id !== id)
+  } catch (error) {
+    console.warn('Usuwanie nie powiodło się!', error)
   }
 }
 
@@ -49,29 +59,54 @@ function confirmAccept(id, data) {
   })
 }
 
+function confirmDelete(id, data) {
+  confirm.require({
+    header: 'Potwierdzenie usuwania zlecenia',
+    message: 'Czy pchcesz usunąć zlecenie?',
+    acceptLabel: 'Tak',
+    rejectLabel: 'Nie',
+    acceptClass: 'p-button-danger',
+    rejectClass: 'p-button-secondary',
+    accept: async () => {
+      data.isAccepted = true
+      await deleteIsAccepted(id, data)
+    },
+    reject: () => {},
+  })
+}
+
 function formatDate(date) {
   return dayjs(date).format('DD/MM/YYYY HH:mm')
 }
 
 async function onCellEditComplete(event) {
-  console.log('Edytowano:', event)
   const { data, newValue, field } = event
-  //data[field] = newValue //zmiana lokalnie a pózniej zapisuje w bd
-  //data to cały obiekt
 
-  const valueToUpdate = field === 'date' ? Timestamp.fromDate(newValue) : newValue
-  data[field] = valueToUpdate
+  let valueToUpdate = newValue
+
+  if (field === 'date') {
+    const parsed = dayjs(newValue)
+
+    if (!parsed.isValid()) {
+      console.warn('Niepoprawna wartość daty.')
+      return
+    }
+
+    valueToUpdate = Timestamp.fromDate(parsed.toDate())
+  }
+
+  data[field] = newValue
   try {
     const docRef = doc(db, 'washingOrders', data.id)
     await updateDoc(docRef, {
-      [field]: valueToUpdate, //dynamiczna właściwość obiektu
+      [field]: valueToUpdate,
     })
   } catch (error) {
     console.error('Błąd aktualizacji:', error)
   }
 }
 </script>
-<!-- zrobić lazy loading-->
+
 <template>
   <ConfirmDialog></ConfirmDialog>
   <DataTable
@@ -99,27 +134,16 @@ async function onCellEditComplete(event) {
         </div>
       </template>
     </Column>
-    <Column field="date" header="Termin">
-      <!-- <template #body="slotProps">
-        <div>
-          <p>{{ formatDate(slotProps.data.date) }}</p>
-        </div>
-      </template> -->
 
+    <Column field="date" header="Termin">
+      <template #body="{ data, field }">
+        {{ formatDate(data[field]) }}
+      </template>
       <template #editor="{ data, field }">
-        <!-- <DatePicker
-          id="datepicker-24h"
-          v-model="data[field]"
-          placeholder="Data"
-          showTime
-          hourFormat="24"
-          :manualInput="false"
-          :disabledDays="[0, 6]"
-          fluid
-          style="margin-top: 1rem"
-        /> --><InputText v-model="data[field]" type="date" />
+        <InputText v-model="data[field]" type="datetime-local" />
       </template>
     </Column>
+
     <Column field="service" header="Usługa"></Column>
     <Column field="description" header="Opis">
       <template #editor="{ data, field }"><InputText v-model="data[field]" /> </template
@@ -134,18 +158,12 @@ async function onCellEditComplete(event) {
             severity="secondary"
           ></Button>
           <Button
-            @click="confirmAccept(slotProps.data.id, slotProps.data)"
+            @click="confirmDelete(slotProps.data.id, slotProps.data)"
             label="Usuń"
             outlined
             severity="danger"
             style="margin-left: 3px"
           ></Button>
-          <!-- <Checkbox
-            v-model="slotProps.data.isAccepted"
-            binary
-            size="large"
-            @change="updateIsAccepted(slotProps.data.id, slotProps.data)"
-          /> -->
         </div>
       </template>
     </Column>

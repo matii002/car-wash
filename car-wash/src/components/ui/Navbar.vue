@@ -2,69 +2,93 @@
 import Menubar from 'primevue/menubar'
 import { RouterLink } from 'vue-router'
 import { useRouter } from 'vue-router'
-import { computed } from 'vue'
+import { onMounted, ref, computed } from 'vue'
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth'
+import Toast from 'primevue/toast'
+import { useToast } from 'primevue/usetoast'
 
 const router = useRouter()
-localStorage.setItem('userToken', 'token')
-const isAuthenticated = computed(() => localStorage.getItem('userToken' !== null))
 
-const items = [
-  {
-    label: 'Strona główna',
-    route: '/',
-  },
-  {
-    label: 'Umów się',
-    route: '/booking',
-  },
-  {
-    label: 'O nas',
-    route: '/about',
-  },
-  {
-    label: 'Przyjmowanie zleceń',
-    route: '/car-wash-panel',
-  },
-  {
-    label: 'Zlecenia',
-    route: '/car-wash-order-panel',
-  },
-]
+const isLoggedIn = ref(false)
 
-function logout() {
-  console.log('Wylogowano użytkownika.')
-  localStorage.clear()
-  router.push({ name: 'login' })
+const auth = getAuth()
+
+const toast = useToast()
+
+onMounted(() => {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      isLoggedIn.value = true
+    } else {
+      isLoggedIn.value = false
+    }
+  })
+})
+
+const handleSignOut = () => {
+  signOut(auth).then(() => {
+    router.push('/login')
+  })
+  console.error('Wylogowano pomyślnie')
+  toast.add({
+    severity: 'success',
+    summary: 'Wylogowano pomyślnie!',
+    life: 3000,
+  })
 }
 
-if (!isAuthenticated.value) {
-  items.push({
-    label: 'Zaloguj się',
-    route: '/login',
-  })
-} else {
-  items.push({
-    label: 'Wyloguj się',
-    command: () => {
-      logout()
+const menuItems = computed(() => {
+  const items = [
+    {
+      label: 'Strona główna',
+      route: '/',
     },
-  })
-}
+    {
+      label: 'Umów się',
+      route: '/booking',
+    },
+    {
+      label: 'O nas',
+      route: '/about',
+    },
+  ]
+
+  if (isLoggedIn.value) {
+    items.push(
+      {
+        label: 'Przyjmowanie zleceń',
+        route: '/car-wash-panel',
+      },
+      {
+        label: 'Zlecenia',
+        route: '/car-wash-order-panel',
+      },
+      {
+        label: 'Wyloguj się',
+        command: handleSignOut,
+      },
+    )
+  } else {
+    items.push({
+      label: 'Zaloguj się',
+      route: '/login',
+    })
+  }
+  return items
+})
 </script>
 
 <template>
-  <Menubar :model="items" style="justify-content: center">
+  <Toast />
+  <Menubar :model="menuItems" style="justify-content: center">
     <template #item="{ item, props, hasSubmenu }">
       <RouterLink v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>
         <a v-ripple :href="href" v-bind="props.action" @click="navigate">
-          <!-- <span :class="item.icon" /> -->
           <span>{{ item.label }}</span>
         </a>
       </RouterLink>
       <a v-else v-ripple :href="item.url" :target="item.target" v-bind="props.action">
-        <!-- <span :class="item.icon" /> -->
         <span>{{ item.label }}</span>
-        <!-- <span v-if="hasSubmenu" class="pi pi-fw pi-angle-down" /> -->
       </a>
     </template>
   </Menubar>

@@ -1,5 +1,6 @@
 import { db } from './firebase'
 import { collection, getDocs, orderBy, query, where } from 'firebase/firestore'
+
 export async function fetchWashingOrders() {
   try {
     const q = query(
@@ -10,9 +11,7 @@ export async function fetchWashingOrders() {
     )
     const querySnapshot = await getDocs(q)
     return querySnapshot.docs.map((doc) => ({
-      //zwraca tablice docs
-      //mapuj (doc) na ...
-      ...doc.data(), // rozpakuj (...) klucz wartość wszystkie pola i utwórz nowy obiekt za pomoca data()
+      ...doc.data(),
       id: doc.id,
       date: doc.data().date.toDate(),
     }))

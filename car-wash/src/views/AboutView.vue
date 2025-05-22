@@ -51,7 +51,7 @@ import 'primeicons/primeicons.css'
 }
 .about h4 a {
   text-decoration: none;
-  color: inherit; /*Dziedzicz właściwość od rodzica*/
+  color: inherit;
 }
 .info-panel {
   width: 45%;

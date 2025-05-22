@@ -13,7 +13,7 @@ import { db } from '@/firebase'
 import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore'
 import DatePicker from 'primevue/datepicker'
 import { onMounted, ref } from 'vue'
-import Select from 'primevue/select'
+import MultiSelect from 'primevue/multiselect'
 import { fetchServices } from '../services.js'
 import { useRouter } from 'vue-router'
 
@@ -38,15 +38,23 @@ let resolver = yupResolver(
       .required('Marka i model samochodu jest wymagany.')
       .min(2, 'Nazwa samochodu jest niepoprawna.'),
     service: yup
-      .string()
+      .array()
+      .of(yup.string())
       .required('Wybierz rodzaj usługi.')
-      .min(2, 'Rodzaj usługi jest niepoprawny.'),
+      .min(1, 'Rodzaj usługi jest niepoprawny.'),
     phone: yup
       .string()
       .required('Telefon jest wymagany.')
       .min(9, 'Numer telefonu jest niepoprawny.'),
     email: yup.string().required('Email jest wymagany.').min(5, 'Email jest niepoprawny.'),
-    date: yup.date().required('Wybierz termin.'),
+    date: yup
+      .date()
+      .typeError('Wybierz poprawną datę i godzinę.')
+      .test('is-within-working-hours', 'Wybierz godzinę między 08:00 a 14:59', (value) => {
+        if (!value) return false
+        const hour = value.getHours()
+        return hour >= 8 && hour < 15
+      }),
     licensePlate: yup
       .string()
       .required('Numer rejestracyjny jest wymagany.')
@@ -70,11 +78,12 @@ async function onFormSubmit({ valid, values }) {
   if (valid == true) {
     try {
       await addDoc(collection(db, 'washingOrders'), {
+        ...values,
         isFinished: false,
         isAccepted: false,
         createdAt: serverTimestamp(),
         date: Timestamp.fromDate(values.date),
-        ...values,
+        service: values.service.join(', '),
       })
       console.log('Dane zostały przesłane.', valid)
       toast.add({
@@ -98,12 +107,6 @@ async function onFormSubmit({ valid, values }) {
     }
   }
 }
-
-const today = new Date()
-const minDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 8, 0)
-
-const maxDateTime = new Date()
-maxDateTime.setHours(15, 0, 0, 0)
 </script>
 
 <template>
@@ -139,8 +142,7 @@ maxDateTime.setHours(15, 0, 0, 0)
         <Message v-if="$form.car?.invalid" severity="error" size="small" variant="simple">{{
           $form.car.error?.message
         }}</Message>
-        <!-- <InputText name="service" type="text" placeholder="Usługa" fluid style="margin-top: 1rem" /> -->
-        <Select
+        <MultiSelect
           name="service"
           placeholder="Wybierz usługę"
           :options="services"
@@ -160,13 +162,6 @@ maxDateTime.setHours(15, 0, 0, 0)
           fluid
           style="margin-top: 1rem"
         />
-        <!-- <InputText
-          name="phone"
-          type="text"
-          placeholder="Telefon"
-          fluid
-          style="margin-bottom: 1rem"
-        /> -->
         <Message v-if="$form.phone?.invalid" severity="error" size="small" variant="simple">{{
           $form.phone.error?.message
         }}</Message>
@@ -195,23 +190,13 @@ maxDateTime.setHours(15, 0, 0, 0)
           showTime
           hourFormat="24"
           :manualInput="false"
-          :minDate="minDateTime"
           :disabledDays="[0, 6]"
           fluid
           style="margin-top: 1rem"
         />
-        <!-- if godz > 15:00 błąd! -->
-        <!-- <InputText name="date" type="date" placeholder="Data" fluid style="margin-top: 1rem" /> -->
         <Message v-if="$form.date?.invalid" severity="error" size="small" variant="simple">{{
           $form.date.error?.message
         }}</Message>
-        <!-- <InputText
-          name="description"
-          type="text"
-          placeholder="Dodatkowe dane - wymagania"
-          fluid
-          style="margin-bottom: 1rem"
-        /> -->
         <Textarea
           name="description"
           rows="3"

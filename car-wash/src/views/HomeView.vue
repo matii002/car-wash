@@ -11,34 +11,6 @@ const services = ref([])
 onMounted(async () => {
   services.value = await fetchServices()
 })
-
-// const services = [
-//   {
-//     service: 'Mycie zewnętrzne',
-//     description: 'Mycie karoserii, szyb i felg',
-//     price: '40 zł',
-//   },
-//   {
-//     service: 'Mycie wewnętrzne',
-//     description: 'Odkurzanie, czyszczenie plastików i szyb',
-//     price: '50 zł',
-//   },
-//   {
-//     service: 'Zestaw: mycie zew. + wew.',
-//     description: 'Kompletne czyszczenie auta z zewnątrz i wewnątrz',
-//     price: '80 zł',
-//   },
-//   {
-//     service: 'Pranie tapicerki',
-//     description: 'Kompleksowe pranie foteli i podsufitki',
-//     price: '150 zł',
-//   },
-//   {
-//     service: 'Polerowanie lakieru',
-//     description: 'Jednoetapowa korekta i nabłyszczanie lakieru',
-//     price: '300 zł',
-//   },
-// ]
 </script>
 
 <template>

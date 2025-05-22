@@ -5,7 +5,7 @@ import BookingView from '../views/BookingView.vue'
 import CarWashPanelView from '@/views/CarWashPanelView.vue'
 import CarWashOrderPanelView from '@/views/CarWashOrderPanelView.vue'
 import LoginView from '@/views/LoginView.vue'
-import LogoutView from '@/views/LogoutView.vue'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -49,18 +49,33 @@ const router = createRouter({
     {
       path: '/logout',
       name: 'logout',
-      component: LogoutView,
       meta: { requiresAuth: true },
     },
   ],
 })
 
-router.beforeEach(async (to, from) => {
-  const isAuthenticated = localStorage.getItem('userToken') !== null
+function getCurrentUser() {
+  return new Promise((resolve) => {
+    const auth = getAuth()
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe()
+      resolve(user)
+    })
+  })
+}
 
-  if (!isAuthenticated && to.meta.requiresAuth) {
-    // redirect the user to the login page
-    return { name: 'login' }
+router.beforeEach(async (to, from, next) => {
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    const user = await getCurrentUser()
+
+    if (user) {
+      next()
+    } else {
+      alert('Nie masz dostepu!')
+      next('/')
+    }
+  } else {
+    next()
   }
 })
 
