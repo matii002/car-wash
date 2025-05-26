@@ -3,9 +3,18 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { ref } from 'vue'
 import { onMounted } from 'vue'
-import { fetchWashingRequests } from '@/washingRequest'
 import { db } from '@/firebase'
-import { doc, updateDoc, Timestamp, deleteDoc } from 'firebase/firestore'
+import {
+  doc,
+  updateDoc,
+  Timestamp,
+  deleteDoc,
+  onSnapshot,
+  collection,
+  orderBy,
+  query,
+  where,
+} from 'firebase/firestore'
 import dayjs from 'dayjs'
 import { Button } from 'primevue'
 import ConfirmDialog from 'primevue/confirmdialog'
@@ -14,10 +23,32 @@ import InputText from 'primevue/inputtext'
 
 const confirm = useConfirm()
 
-const washingRequest = ref([])
+const washingRequests = ref([])
 
 onMounted(async () => {
-  washingRequest.value = await fetchWashingRequests()
+  try {
+    const q = query(
+      collection(db, 'washingOrders'),
+      where('isAccepted', '==', false),
+      orderBy('createdAt', 'desc'),
+    )
+
+    onSnapshot(
+      q,
+      (snapshot) => {
+        washingRequests.value = snapshot.docs.map((doc) => ({
+          ...doc.data(),
+          id: doc.id,
+          date: doc.data().date.toDate(),
+        }))
+      },
+      (error) => {
+        console.error('Błąd podczas nasłuchiwania danych z firestore.', error)
+      },
+    )
+  } catch (error) {
+    console.error('Błąd podczas pobierania danych.', error)
+  }
 })
 
 async function updateIsAccepted(id, data) {
@@ -37,7 +68,6 @@ async function deleteIsAccepted(id, data) {
     await deleteDoc(docRef, {
       isAccepted: data.isAccepted,
     })
-    washingRequest.value = washingRequest.value.filter((item) => item.id !== id)
   } catch (error) {
     console.warn('Usuwanie nie powiodło się!', error)
   }

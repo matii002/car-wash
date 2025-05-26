@@ -3,17 +3,48 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { ref } from 'vue'
 import { onMounted } from 'vue'
-import { fetchWashingOrders } from '@/washingOrders'
 import Checkbox from 'primevue/checkbox'
 import { db } from '@/firebase'
-import { doc, updateDoc, Timestamp } from 'firebase/firestore'
+import {
+  doc,
+  updateDoc,
+  Timestamp,
+  onSnapshot,
+  collection,
+  orderBy,
+  query,
+  where,
+} from 'firebase/firestore'
 import dayjs from 'dayjs'
 import InputText from 'primevue/inputtext'
 
 const washingOrders = ref([])
 
 onMounted(async () => {
-  washingOrders.value = await fetchWashingOrders()
+  try {
+    const q = query(
+      collection(db, 'washingOrders'),
+      where('isAccepted', '==', true),
+      orderBy('isFinished', 'asc'),
+      orderBy('date', 'desc'),
+    )
+
+    onSnapshot(
+      q,
+      (snapshot) => {
+        washingOrders.value = snapshot.docs.map((doc) => ({
+          ...doc.data(),
+          id: doc.id,
+          date: doc.data().date.toDate(),
+        }))
+      },
+      (error) => {
+        console.error('Błąd podczas nasłuchiwania danych z firestore.', error)
+      },
+    )
+  } catch (error) {
+    console.error('Błąd podczas pobierania danych.', error)
+  }
 })
 
 async function updateIsFinished(id, data) {
