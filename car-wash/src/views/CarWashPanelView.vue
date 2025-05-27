@@ -140,7 +140,7 @@ async function onCellEditComplete(event) {
 <template>
   <ConfirmDialog></ConfirmDialog>
   <DataTable
-    :value="washingRequest"
+    :value="washingRequests"
     tableStyle="min-width: 40rem; padding: 0 4%"
     paginator
     :rows="10"

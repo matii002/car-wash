@@ -15,7 +15,7 @@ onMounted(async () => {
 
 <template>
   <div class="content">
-    <Image src="../../public/car-wash.png" alt="Image" width="200" />
+    <Image src="/car-wash.png" alt="Image" width="200" />
 
     <h2>Mtp Detailing</h2>
 

@@ -69,7 +69,7 @@ function onFormSubmit(data) {
       @submit="onFormSubmit"
       class="loginForm"
     >
-      <Image src="../../public/car-wash.png" alt="Image" width="200" />
+      <Image src="/car-wash.png" alt="Image" width="200" />
       <div class="flex flex-col gap-1">
         <InputText name="email" type="text" placeholder="Email" class="field" />
         <Message v-if="$form.email?.invalid" severity="error" size="small" variant="simple">{{
