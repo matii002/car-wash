@@ -3,7 +3,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { ref } from 'vue'
 import { onMounted } from 'vue'
-import Checkbox from 'primevue/checkbox'
+import Button from 'primevue/button'
 import { db } from '@/firebase'
 import {
   doc,
@@ -17,8 +17,12 @@ import {
 } from 'firebase/firestore'
 import dayjs from 'dayjs'
 import InputText from 'primevue/inputtext'
+import ConfirmDialog from 'primevue/confirmdialog'
+import { useConfirm } from 'primevue/useconfirm'
 
 const washingOrders = ref([])
+
+const confirm = useConfirm()
 
 onMounted(async () => {
   try {
@@ -47,11 +51,11 @@ onMounted(async () => {
   }
 })
 
-async function updateIsFinished(id, data) {
+async function updateIsFinished(id, newValue) {
   try {
     const docRef = doc(db, 'washingOrders', id)
     await updateDoc(docRef, {
-      isFinished: data.isFinished,
+      isFinished: newValue,
     })
   } catch (error) {
     console.log('Aktualizacja nie powiodła się!', error)
@@ -88,9 +92,44 @@ async function onCellEditComplete(event) {
     console.error('Błąd aktualizacji:', error)
   }
 }
+
+const handleUpdate = (id, newValue) => {
+  updateIsFinished(id, newValue)
+}
+
+function confirmAccept(id, newValue) {
+  if (newValue) {
+    confirm.require({
+      header: 'Potwierdzenie wykonania zlecenia',
+      message: 'Czy potwierdzasz wykonanie zlecenia?',
+      acceptLabel: 'Tak',
+      rejectLabel: 'Nie',
+      acceptClass: 'p-button-success',
+      rejectClass: 'p-button-secondary',
+      accept: () => {
+        handleUpdate(id, newValue)
+      },
+      reject: () => {},
+    })
+  } else {
+    confirm.require({
+      header: 'Zmiana statusu zlecenia',
+      message: 'Czy potwierdzasz zmianę statusu na nieukończony?',
+      acceptLabel: 'Tak',
+      rejectLabel: 'Nie',
+      acceptClass: 'p-button-warn',
+      rejectClass: 'p-button-secondary',
+      accept: () => {
+        handleUpdate(id, newValue)
+      },
+      reject: () => {},
+    })
+  }
+}
 </script>
 
 <template>
+  <ConfirmDialog></ConfirmDialog>
   <DataTable
     :value="washingOrders"
     editMode="cell"
@@ -130,14 +169,21 @@ async function onCellEditComplete(event) {
     ></Column>
     <Column field="isFinished" header="Ukończony" sortable>
       <template #body="slotProps">
-        <div>
+        <!-- <div>
           <Checkbox
             v-model="slotProps.data.isFinished"
             binary
             size="large"
             @change="updateIsFinished(slotProps.data.id, slotProps.data)"
           />
-        </div>
+        </div> -->
+        <Button
+          :label="slotProps.data.isFinished ? 'Ukończone' : 'Nieukończone'"
+          :severity="slotProps.data.isFinished ? 'success' : 'warn'"
+          variant="text"
+          size="medium"
+          @click="confirmAccept(slotProps.data.id, !slotProps.data.isFinished)"
+        />
       </template>
     </Column>
   </DataTable>

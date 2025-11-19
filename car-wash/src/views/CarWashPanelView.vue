@@ -92,7 +92,7 @@ function confirmAccept(id, data) {
 function confirmDelete(id, data) {
   confirm.require({
     header: 'Potwierdzenie usuwania zlecenia',
-    message: 'Czy pchcesz usunąć zlecenie?',
+    message: 'Czy chcesz usunąć zlecenie?',
     acceptLabel: 'Tak',
     rejectLabel: 'Nie',
     acceptClass: 'p-button-danger',
