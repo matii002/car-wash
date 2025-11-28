@@ -60,7 +60,12 @@ function onFormSubmit(data) {
 
 <template>
   <Toast />
-  <h3 id="info">Logowanie tylko i wyłącznie dla pracowników Mtp Detailing!</h3>
+  <div class="container">
+    <div class="info">
+      <span class="warn"><i class="pi pi-exclamation-triangle"></i></span>
+      <span class="text"> Logowanie tylko i wyłącznie dla pracowników Mtp Detailing!</span>
+    </div>
+  </div>
   <div class="outside">
     <Form
       v-slot="$form"
@@ -105,7 +110,7 @@ function onFormSubmit(data) {
   width: 100%;
   max-width: 350px;
   text-align: center;
-  margin-top: 4%;
+  margin-top: 20px;
   max-height: 450px;
 }
 #ha2 {
@@ -123,10 +128,26 @@ function onFormSubmit(data) {
   max-width: 100%;
   margin-top: 2.5rem;
 }
-#info {
-  color: red;
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.info {
   text-align: center;
-  margin-top: 1rem;
-  font-size: large;
+  margin-top: 20px;
+  max-width: 350px;
+  border-radius: 8px;
+  padding: 5px;
+  border: 1px solid #f97316;
+  background-color: #fff8f3;
+}
+.text {
+  font-size: small;
+  font-weight: 500;
+  color: rgb(71, 85, 105);
+}
+.warn {
+  color: red;
 }
 </style>

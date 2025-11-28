@@ -5,6 +5,9 @@ import 'primeicons/primeicons.css'
 <template>
   <div class="about">
     <Panel header="O nas" class="info-panel">
+      <div class="photo">
+        <img src="@/assets/team.png" alt="Mtp Detailing Katowice Logo" width="300" class="image" />
+      </div>
       <p class="m-0">
         Mtp Detailng Katowice powstało z potrzeby serca, nie z planu na biznes. Założycielem firmy
         jest Mateusz Proszowski, student informatyki, który pewnego dnia zrozumiał, że programowanie
@@ -61,5 +64,14 @@ import 'primeicons/primeicons.css'
 .info-panel-1 {
   width: 45%;
   margin-top: 20px;
+}
+.photo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 10px;
+}
+.image {
+  border-radius: 8px;
 }
 </style>

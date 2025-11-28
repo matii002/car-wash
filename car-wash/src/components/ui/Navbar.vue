@@ -1,5 +1,4 @@
 <script setup>
-import styles from '@/assets/navbar.module.css'
 import Menubar from 'primevue/menubar'
 import { RouterLink } from 'vue-router'
 import { useRouter } from 'vue-router'
@@ -89,15 +88,15 @@ const menuItems = computed(() => {
 
 <template>
   <Toast />
-  <Menubar :model="menuItems" style="justify-content: center; background-color: #475569">
+  <Menubar :model="menuItems" style="justify-content: center; background-color: #475569" disabled>
     <template #item="{ item, props, hasSubmenu }">
       <RouterLink v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>
-        <a v-ripple :href="href" v-bind="props.action" @click="navigate">
+        <a :href="href" v-bind="props.action" @click="navigate">
           <i v-if="item.icon" :class="item.icon" style="color: white"></i>
           <span style="font-weight: 500; color: white">{{ item.label }}</span>
         </a>
       </RouterLink>
-      <a v-else v-ripple :href="item.url" :target="item.target" v-bind="props.action">
+      <a v-else :href="item.url" :target="item.target" v-bind="props.action">
         <i v-if="item.icon" :class="item.icon" style="color: white"></i>
         <span>{{ item.label }}</span>
       </a>
